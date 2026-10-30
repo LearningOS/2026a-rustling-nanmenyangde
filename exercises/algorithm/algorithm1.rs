@@ -2,19 +2,18 @@
 	single linked list merge
 	This problem requires you to merge two ordered singly linked lists into one ordered singly linked list
 */
-// I AM NOT DONE
 
 use std::fmt::{self, Display, Formatter};
 use std::ptr::NonNull;
 use std::vec::*;
 
 #[derive(Debug)]
-struct Node<T> {
+struct Node<T : Ord> {
     val: T,
     next: Option<NonNull<Node<T>>>,
 }
 
-impl<T> Node<T> {
+impl<T : Ord> Node<T> {
     fn new(t: T) -> Node<T> {
         Node {
             val: t,
@@ -23,19 +22,19 @@ impl<T> Node<T> {
     }
 }
 #[derive(Debug)]
-struct LinkedList<T> {
+struct LinkedList<T : Ord> {
     length: u32,
     start: Option<NonNull<Node<T>>>,
     end: Option<NonNull<Node<T>>>,
 }
 
-impl<T> Default for LinkedList<T> {
+impl<T : Ord> Default for LinkedList<T> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<T> LinkedList<T> {
+impl<T : Ord> LinkedList<T> {
     pub fn new() -> Self {
         Self {
             length: 0,
@@ -69,18 +68,37 @@ impl<T> LinkedList<T> {
             },
         }
     }
-	pub fn merge(list_a:LinkedList<T>,list_b:LinkedList<T>) -> Self
+    pub fn pop_front(&mut self) -> Option<T> {
+        let head = self.start?;
+        let node = unsafe { Box::from_raw(head.as_ptr())};
+        self.start = node.next;
+        if self.start.is_none() {
+            self.end = None;
+        }
+        self.length -= 1;
+        Some(node.val)
+    }
+	pub fn merge(mut list_a:LinkedList<T>, mut list_b:LinkedList<T>) -> Self
 	{
-		//TODO
-		Self {
+        let mut result = Self {
             length: 0,
             start: None,
             end: None,
+        };
+        loop {
+            let flag = match (list_a.get(0), list_b.get(0))  {
+                (None, None) => break,
+                (Some(_), None) => true,
+                (None, Some(_)) => false,
+                (Some(a), Some(b)) => a<=b
+            };
+            result.add(if flag {list_a.pop_front().unwrap()} else {list_b.pop_front().unwrap()});
         }
+        result
 	}
 }
 
-impl<T> Display for LinkedList<T>
+impl<T : Ord> Display for LinkedList<T>
 where
     T: Display,
 {
@@ -92,7 +110,7 @@ where
     }
 }
 
-impl<T> Display for Node<T>
+impl<T : Ord> Display for Node<T>
 where
     T: Display,
 {
